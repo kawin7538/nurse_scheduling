@@ -65,3 +65,9 @@ where $z$ is additional binary value.
 
 ## my objective function
 - least sum cost of all nurses at overtime in a month, plus evening and night at regular shift
+- least sd of Morning, Evening, and Night (regular and OT) from all nurses (or just sum (x-x\bar)^2)
+
+# Try to run multiple objective
+- first, run only the first objective (lowest overtime cost)
+- then make objective function from the first run as the another constraint
+- finally run only on the last objective function.

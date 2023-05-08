@@ -1,0 +1,140 @@
+% !TeX program = pdflatex
+
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\begin{document}
+
+\title{Technical Notes on Nurse Scheduling System}
+
+\author{\IEEEauthorblockN{Kawin Chinpong}
+\IEEEauthorblockA{
+Bangkok, Thailand \\
+kawin7538@hotmail.com}
+}
+
+\maketitle
+
+\begin{abstract}
+This document is a model and instructions for \LaTeX.
+This and the IEEEtran.cls file define the components of your paper [title, text, heads, etc.]. *CRITICAL: Do Not Use Symbols, Special Characters, Footnotes, 
+or Math in Paper Title or Abstract.
+\end{abstract}
+
+\begin{IEEEkeywords}
+component, formatting, style, styling, insert
+\end{IEEEkeywords}
+
+\section{Introduction}
+This document proposes some linear programming approach to accomplish nurse rostering problem because it might be biased if there is insufficient equally assigned some working shifts to all nurses in department. Briefly review literature, scope of scenario including with mathematical definition will be described on the afterward sections.
+
+\subsection{Objective}
+To accomplish monthly scheduling on nurse workers within some conditions.
+
+\section{Review Literature}
+
+\subsection{Criteria to success Nurse Scheduling Problem}
+
+As Burke said \cite{Burke2004}, there were five main criteria which any planners should achieve as follow
+\begin{itemize}
+	\item coverage
+	\item quality
+	\item stability
+	\item flexibility
+	\item cost
+\end{itemize}
+
+\subsection{(Integer) Linear Programming}
+From Taha's \cite{taha2017operations}, linear programming consists of three basic components:
+\begin{enumerate}
+	\item Decision \textbf{variables} that we seek to determine.
+	\item \textbf{Objective} (goal) that we need to optimize (maximize or minimize).
+	\item \textbf{Constraints} that the solution must satisfy.
+\end{enumerate}
+In this case, for decision variable $x_{i} \in X$, linear programming (LP) that were afterward explained might be written as
+\begin{equation*}
+	\begin{aligned}
+		\text{Minimize (or Maximize)} & \sum_{i\in I} c_{i}x_{i} \\
+		\text{subject to (s.t.)} & \sum_{j\in J} \sum_{i\in I} a_{ij}x_{i} \le b_{j}
+	\end{aligned}
+\end{equation*}
+Thus, on the integer programming (or integer linear programming, ILP), which were extension of simple linear programming, Branch-and-bound (B\&B) and Cutting-plane method were available to be used, which consisted of 3 steps as follow:
+\begin{enumerate}
+	\item Simply compute LP without any integer restriction.
+	\item Add special constraints that iteratively modify LP solution space to be rendered into ILP problem
+\end{enumerate}
+
+\section{Scope of Scenario}
+In this study, there were some specific settings of nurse working as following subsections.
+
+\subsection{Basic information on Nurse}
+In this study, there were 30 active nurses with equally assignments on individual.
+
+\subsection{Types of Work due to Nurses' Income}
+There were 2 types.
+\begin{itemize}
+	\item \textit{Regular}, count toward minimum requirements for each month and does not count toward special income.
+	\item \textit{Overtime}, special working assignments which does not count as monthly requirement working time. This count into special income.
+\end{itemize}
+Nurses' assignment on both regular and overtime shift were equally distributed.
+
+\subsection{Scheduling shifts}
+There were 2 or 3 shifts in Thailand. In this study, 3+1 shifts was specified as follow:
+\begin{itemize}
+	\item \textit{Morning} (\textbf{M}), from 08.00 to 16.00
+	\item \textit{Evening} (\textbf{E}), from 16.00 to 24.00
+	\item \textit{Night} (\textbf{N}), from 24.00 to 08.00 next day
+	\item \textit{OFF}, nurse does not work on the day with this label.
+\end{itemize}
+Schedule in this study were run for 31 days, started with Morning, and always starts with Sunday. Days of a week is not effected job assignment.
+
+\subsection{Additional Costs that may effect optimization}
+In this study, overtime cost were 700 per shift per nurse. Evening and night shift were additionally costed at 240 per shift per nurse. Further violation compared with scheduling conditions were investigated by cases.
+
+\subsection{Condition for nurse scheduling}
+Conditions applied in this study were partially assumed based on real situation retrieve from articles \cite{Thongsopa_Janjarassuk_2021,Ratee2019_nursescheduling} and briefly interview from working nurse.
+
+\subsubsection{Required Condition}
+Required conditions were prerequisite which cannot be resisted in any approaches. Conditions in this study were consisted of following items:
+\begin{itemize}
+	\item Only regular or overtime were selected for each timeshift for each nurse at a day.
+	\item Only 1 regular shift per day which a nurse can be assigned.
+	\item Any nurse cannot work in night (N) shift then morning (M) in the next day.
+	\item Any nurse cannot work in evening (E) shift then night (N) on the same day.
+	\item Nurses would be able to work in morning (M) shift then evening (E) on the same day but not over than 3 consecutive days.
+	\item On the 7 consecutive days, nurses will received at least one off day.
+	\item Nurses cannot work at night (N) shift for 2 continuous days.
+\end{itemize}
+
+\subsubsection{Flexible Condition}
+On the contrary, flexbile conditions were requirements which would be allowed to break if needed, with some extra costs (or cost-free, depend on situation). Flexible conditions in this study would consist of the following terms
+\begin{itemize}
+	\item Sum of nurses for each shift should not less than 7 (penalty cost 9000 per drastic of nurse workers).
+	\item Sum of regular workdays should total defined regular workday in month (penalty cost 2000 per nurse per days in different).
+	\item Nurse might be allow to work only 1 shift per day (for regular plus overtime, no penalty cost applied).
+	\item Nurse should avoid non-consecutive working-day pattern (e.g., OFF-work-OFF) (no violation penalty applied).
+	\item Any nurses cannot work in night shift then evening of the next day (no violation cost applied).
+\end{itemize}
+
+\section{Mathematical Formulation}
+
+\subsection{Definition}
+\subsection{Base Objective Function}
+\subsection{Constraint Formulation}
+
+\bibliographystyle{IEEEtran}
+\bibliography{technical_reports}
+
+\appendices
+
+\section{Operations Research}
+
+\end{document}

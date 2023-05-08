@@ -32,8 +32,23 @@ nurse_workload_overtime=LpVariable.dicts("Nurse Workload at overtime",(LIST_DAYS
 nurse_off=LpVariable.dicts("Nurse OFF",(LIST_DAYS,LIST_NURSE),cat=LpBinary)
 
 #%% define objective function
-# model += (700*lpSum(nurse_workload_overtime)+240*lpSum([nurse_workload_regular[t][k] for t in LIST_DAYS for k in range(1,3)]))
-model += (700*lpSum(nurse_workload_overtime))
+
+# minimum cost of overtime
+# model += (700*lpSum(nurse_workload_overtime))
+
+# minimum RANGE (max-min) of Morning + Evening + Night
+z_obj_var1=LpVariable.dicts("addition variable for objective level1",(LIST_SHIFT,LIST_NURSE),lowBound=0,cat=LpInteger)
+for k in LIST_SHIFT:
+    for i in LIST_NURSE:
+        model += (z_obj_var1[k][i]==lpSum([nurse_workload_regular[t][k][i] for t in LIST_DAYS])+lpSum([nurse_workload_overtime[t][k][i] for t in LIST_DAYS]))
+z_obj_var2_max=LpVariable.dicts("addition variable for objective level2 max",(LIST_SHIFT,),lowBound=0,cat=LpInteger)
+z_obj_var2_min=LpVariable.dicts("addition variable for objective level2 min",(LIST_SHIFT,),lowBound=0,cat=LpInteger)
+for k in LIST_SHIFT:
+    model += (z_obj_var2_max[k]>=z_obj_var2_min[k])
+    for i in LIST_NURSE:
+        model += (z_obj_var2_max[k]>=z_obj_var1[k][i])
+        model += (z_obj_var2_min[k]<=z_obj_var1[k][i])
+model += (lpSum(z_obj_var2_max)-lpSum(z_obj_var2_min))
 
 #%% constraint MUST 1
 for t in LIST_DAYS:
@@ -89,7 +104,7 @@ for t in LIST_DAYS:
         c_lhs=LpAffineExpression(c_lhs)
         c_rhs=7
         c_pre=LpConstraint(e=c_lhs,sense=LpConstraintGE,name=f"MinimumNurseGE7_{t}_{k}",rhs=c_rhs)
-        c_elastic=c_pre.makeElasticSubProblem(penalty=2000,proportionFreeBound=0)
+        c_elastic=c_pre.makeElasticSubProblem(penalty=1,proportionFreeBound=0)
         model.extend(c_elastic)
 
 #%% constraint FLEXIBLE 2
@@ -98,7 +113,7 @@ for i in LIST_NURSE:
     c_lhs=LpAffineExpression(c_lhs)
     c_rhs=N_WORKING_DAY
     c_pre=LpConstraint(e=c_lhs,sense=LpConstraintEQ,name=f"MinimumWorkingDay_{i}",rhs=c_rhs)
-    c_elastic=c_pre.makeElasticSubProblem(penalty=2000,proportionFreeBound=0)
+    c_elastic=c_pre.makeElasticSubProblem(penalty=1,proportionFreeBound=0)
     model.extend(c_elastic)
 
 #%% constraint FLEXIBLE 3
@@ -128,7 +143,7 @@ for t in LIST_DAYS[:-2]:
         c_lhs=LpAffineExpression(c_lhs)
         c_rhs=2
         c_pre=LpConstraint(e=c_lhs,sense=LpConstraintLE,name=f"LimitationOnBreakingType_{t}_{i}",rhs=c_rhs)
-        c_elastic=c_pre.makeElasticSubProblem(penalty=2000,proportionFreeBound=0)
+        c_elastic=c_pre.makeElasticSubProblem(penalty=1,proportionFreeBound=0)
         model.extend(c_elastic)
 
 #%% constraint FLEXIBLE 5
@@ -138,7 +153,7 @@ for t in LIST_DAYS[:-1]:
         c_lhs=LpAffineExpression(c_lhs)
         c_rhs=1
         c_pre=LpConstraint(e=c_lhs,sense=LpConstraintLE,name=f"LimitationOnNightThenEvening_{t}_{i}",rhs=c_rhs)
-        c_elastic=c_pre.makeElasticSubProblem(penalty=500,proportionFreeBound=0)
+        c_elastic=c_pre.makeElasticSubProblem(penalty=1,proportionFreeBound=0)
         model.extend(c_elastic)
 
 #%% constraint TECHNICAL 1
@@ -154,10 +169,39 @@ for t in LIST_DAYS:
 
 #%% solve and visualize
 
+# print("Run on the first objective function, lowest addition cost on OT")
+
+# model.writeLP("output/model.lp")
+
+# path_cbc=r"D:\Kawin\nurse_scheduling\Cbc-2.10.5-win32-msvc15\bin\cbc.exe"
+# solver=COIN_CMD(path=path_cbc)
+# model.solve(solver)
+
+# with open("output/model.txt","w") as f:
+#     # custom_print_model_status(model,f)
+#     print(model,file=f)
+#     for var in model.variables():
+#         print(f"{var.name}: {var.value()}",file=f)
+#     # check constraint values
+#     for name, constraint in model.constraints.items():
+#         print(f"{name}: {constraint.value()}",file=f)
+
+#%% additional constraint and the next objective function, lowest variance for each shift.
+
+# constraint from the first objective function
+model += (700*lpSum(nurse_workload_overtime)<=35700)
+
+#%% solve and visualize again
+
+print("Run on the second objective function, lowest variance on arrangement")
+
 model.writeLP("output/model.lp")
+model.writeMPS("output/model.mps")
 
 path_cbc=r"D:\Kawin\nurse_scheduling\Cbc-2.10.5-win32-msvc15\bin\cbc.exe"
-solver=COIN_CMD(path=path_cbc)
+path_highs=r"D:\Kawin\nurse_scheduling\HiGHSstatic.v1.5.1.x86_64-w64-mingw32\bin\highs.exe"
+# solver=COIN_CMD(path=path_cbc)
+solver=HiGHS_CMD(path=path_highs,threads=8,keepFiles=False,logPath='output/highs_solver.log')
 model.solve(solver)
 
 with open("output/model.txt","w") as f:
